@@ -1,49 +1,80 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+
+import io from 'socket.io-client';
+
+import Navigation from '../navigation/Navigation';
+import "./style.css"
+import gazel from '../img/bakyl.png';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import MapboxDirections from '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions';
-import '@mapbox/mapbox-gl-directions/dist/mapbox-gl-directions.css';
 
-const Map = () => {
-  useEffect(() => {
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZGRkZGRkYW55YSIsImEiOiJjbHZpMG5xMjIwajNzMnZxb2FrbW1wMnh4In0.HCL8keo5WFgvJw5UcyY_9Q';
+const MapWithMarkers = () => {
+    const [cars, setCars] = useState([]);
+    const [notif, setNotif] = useState([]);
+    const [socket, setSocket] = useState(null);
+    const [coordinates, setCoordinates] = useState([]);
 
-    navigator.geolocation.getCurrentPosition(successLocation, errorLocation, {
-      enableHighAccuracy: true
-    });
+    useEffect(() => {
+        const socket = io("http://localhost:2000/", {
+            reconnectionAttempts: 5,
+            timeout: 10000,
+        });
 
-    function successLocation(position) {
-      setupMap([position.coords.longitude, position.coords.latitude]);
-    }
+        socket.on('GET_CARS', (data) => {
+            setCars(data);
+        });
 
-    function errorLocation() {
-      setupMap([-2.24, 53.48]);
-    }
+        socket.on('GET_NOTIFICATIONS', (data) => {
+            setNotif(data);
+        });
 
-    function setupMap(center) {
-      const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/ddddddanya/clvkpsics010801o0f4za4lfj',
-        center: center,
-        zoom: 15
-      });
+        setSocket(socket);
 
-      const nav = new mapboxgl.NavigationControl();
-      map.addControl(nav);
+        return () => {
+            socket.disconnect();
+        };
+    }, []);
 
-      const directions = new MapboxDirections({
-        accessToken: mapboxgl.accessToken
-      });
+    useEffect(() => {
+        setCoordinates(prevCoordinates => [...prevCoordinates, ...cars.map(car => ({ lng: parseFloat(car.lng), lat: parseFloat(car.lat) }))]);
+    }, [cars]);
 
-      map.addControl(directions, 'top-left');
-    }
-  }, []);
+    useEffect(() => {
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZGRkZGRkYW55YSIsImEiOiJjbHZpMG5xMjIwajNzMnZxb2FrbW1wMnh4In0.HCL8keo5WFgvJw5UcyY_9Q';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [76.9567793, 52.2498683],
+            zoom: 12
+        });
 
-  return (
-    <div className="h-screen w-screen">
-      <div id="map" className="h-full"></div>
-    </div>
-  );
+        if (!map) return;
+        
+        // Создаем маркеры для каждой машины
+        coordinates.forEach((coordinate) => {
+            const newMarker = document.createElement('div');
+            newMarker.className = 'custom-marker';
+            newMarker.style.backgroundImage =  `url(${gazel})`;
+            newMarker.style.width = '40px';
+            newMarker.style.height = '40px';
+            const marker = new mapboxgl.Marker(newMarker)
+                .setLngLat([coordinate.lng, coordinate.lat])
+                .addTo(map);
+        });
+
+        return () => {
+            map.remove();
+        };
+    }, [coordinates]);
+
+    return (
+      <div className="">  <div className="absolute top-0 bottom-0 w-full h-screen overflow-hidden">
+      <Navigation />
+    
+      <div id="map" className="absolute top-16 bottom-0 w-full h-full overflow-hidden" />
+  </div></div>
+    
+    );
 };
 
-export default Map;
+export default MapWithMarkers;

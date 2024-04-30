@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import axios from 'axios';
+
 import bakyl from "../img/bakyl.png"
 
 const Auth = () => {
@@ -8,11 +10,17 @@ const Auth = () => {
     const [password, setPassword] = useState('');
     const [isValid, setIsValid] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-       
+    
         if (email && password) {
-            setIsValid(true);
+            try {
+                const response = await axios.post('http://localhost:2000/api/auth', { email, password });
+                console.log(response.data); // Что-то делайте с ответом от сервера
+                setIsValid(true);
+            } catch (error) {
+                console.error('Ошибка при отправке данных:', error);
+            }
         } else {
             setIsValid(false);
         }
@@ -21,7 +29,7 @@ const Auth = () => {
     return (
         <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-                <img className="mx-auto h-auto w-4/12" src={bakyl} alt="Your Company"/>
+                <img className="mx-auto h-auto w-2/4" src={bakyl} alt="Your Company"/>
                 <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Вход в аккаунт</h2>
             </div>
 
@@ -46,9 +54,9 @@ const Auth = () => {
 
                     <div>
                         {isValid ? (
-                            <Link to="/map" className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Войти</Link>
+                            <Link to="/map" className="flex w-full justify-center rounded-md  px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm bg-blue-500 hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" >Войти</Link>
                         ) : (
-                            <button type="submit" className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Войти</button>
+                            <button type="submit" className="flex w-full justify-center rounded-md  px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm bg-blue-500 hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ">Войти</button>
                         )}
                     </div>
                 </form>
