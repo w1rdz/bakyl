@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { format, parseISO } from 'date-fns';
 
 function Notifications() {
 
@@ -25,7 +26,7 @@ function Notifications() {
     }, []);
 
     useEffect(() => {
-        setNotifik([...notifik, ...notif.map(notif => ({ msg: notif.text, time: notif.createdAt }))]);
+        setNotifik([...notifik, ...notif.map(notif => ({ carId: notif.carId, msg: notif.text, time: format(parseISO(notif.createdAt), 'dd.MM.yyyy HH:mm:ss') }))]);
     }, [notif]);
 
     return (
@@ -35,7 +36,12 @@ function Notifications() {
                 <ul className="grid gap-4">
                     {notifik.map((not, index) => (
                         <li key={index} className='bg-white px-2 py-4 rounded-xl'>
-                            <strong>ID:</strong> {not.msg}, <strong>Location:</strong> {not.time}
+                            <div className="flex justify-between">
+                                <strong>ID: {not.carId}</strong>
+                                
+                            </div>
+                            
+                            <div>{not.msg},{not.time}</div>
                         </li>
                     ))}
                 </ul>
